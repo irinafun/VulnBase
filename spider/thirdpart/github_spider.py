@@ -39,6 +39,10 @@ class GithubSpider(CVEDetailSpider):
             sometimes, it will require user to input some args, like ip, port, etc.
 
             mostly, hacker like to leave their name in the code, so we can check if the code is written by hacker
+
+            what's more, hacker like to use some thirdpart library to make the code more simple
+            so we can check if the code import some thirdpart library
+                1. pwntools
         '''
 
         # network attack
@@ -55,6 +59,14 @@ class GithubSpider(CVEDetailSpider):
         if 'by hacker' in content or 'by 0x' in content or 'by 0day' in content or 'by 0xd0' in content or 'by 0x00' in content or 'by 0x0' in content:
             return True
         
+        # directly exploit
+        if 'exploit' in content or 'exploitation' in content:
+            return True
+        
+        # thirdpart library
+        if 'import pwn' in content or 'from pwn import' in content or 'pwntools' in content:
+            return True
+
         return False
     
     def check_if_go(self, content: str) -> bool:
