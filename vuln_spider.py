@@ -1,5 +1,6 @@
 from spider.cve_spider import CVESpider
-from spider.thirdpart.nvd import NVDSpider
+from spider.thirdpart.nvd_spider import NVDSpider
+from spider.thirdpart.github_spider import GithubSpider
 
 import argparse
 
@@ -9,7 +10,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.m == 'spider':
-        spider = CVESpider(NVDSpider(), None)
+        spider = CVESpider(NVDSpider(), GithubSpider())
         spider.get_list()
     elif args.m == 'cached':
         list = NVDSpider.get_cached_list()

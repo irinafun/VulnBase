@@ -38,6 +38,7 @@ class NVDSpider(CVEListSpider):
                 if result['totalResults'] == 0:
                     break
                 total = result['totalResults']
+
                 if 'result' in result:
                     for cve in result['result']['CVE_Items']:
                         cve_id = cve['cve']['CVE_data_meta']['ID']
