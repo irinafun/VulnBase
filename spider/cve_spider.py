@@ -69,7 +69,15 @@ class CVEDetailItem:
         self.exp = exp
     
     def __str__(self):
-        return 'cve: {}, created: {} \n exp: \n{} \n poc: \n{}'.format(self.cve_id, datetime.fromtimestamp(self.cve_timestamp), self.exp, self.poc)
+        # most 5 lines of poc and exp
+        poc = self.poc.split('\n')
+        exp = self.exp.split('\n')
+        poc = poc[:5]
+        exp = exp[:5]
+        poc = '\n'.join(poc) + '\n...'
+        exp = '\n'.join(exp) + '\n...'
+
+        return 'cve: {}, created: {} \n exp: \n{} \n poc: \n{}'.format(self.cve_id, datetime.fromtimestamp(self.cve_timestamp), exp, poc)
 
 class CVEListSpider(Spider):
     def __init__(self):

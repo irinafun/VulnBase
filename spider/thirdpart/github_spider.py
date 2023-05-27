@@ -26,6 +26,10 @@ class GithubSpider(CVEDetailSpider):
         if 'by hacker' in content or 'by 0x' in content or 'by 0day' in content or 'by 0xd0' in content or 'by 0x00' in content or 'by 0x0' in content:
             return True
         
+        # directly exploit
+        if 'exploit' in content or 'exploitation' in content:
+            return True
+        
         return False
 
     def check_if_python(self, content: str) -> bool:
@@ -46,7 +50,7 @@ class GithubSpider(CVEDetailSpider):
             return True
         if 'http' in content and ('get(' in content or 'post(' in content or 'put(' in content or 'delete(' in content):
             return True
-        
+                
         # hacker name
         if 'by hacker' in content or 'by 0x' in content or 'by 0day' in content or 'by 0xd0' in content or 'by 0x00' in content or 'by 0x0' in content:
             return True
@@ -200,7 +204,8 @@ class GithubSpider(CVEDetailSpider):
 
         github_instance = GithubFactory.get_github()
         result = github_instance.search_code(f'{cve_id} in:file,path')
-            
+
+        i = 0            
         for item in result:
             # check if the repository contains exploit code or poc and check if the repo is popular enough
             item_url = item.html_url
@@ -211,7 +216,6 @@ class GithubSpider(CVEDetailSpider):
 
             exp = ''
             poc = ''
-            description = ''
 
             print(f'found {cve_id} in {item_url}')
 
@@ -263,12 +267,18 @@ class GithubSpider(CVEDetailSpider):
                     wait_judge_poc_or_exp= content
             
             if wait_judge_poc_or_exp != '':
-                if self.check_if_exp(wait_judge_poc_or_exp):
+                if self.check_if_exp(wait_judge_poc_or_exp.lower()):
                     exp = wait_judge_poc_or_exp
-                elif self.check_if_poc(wait_judge_poc_or_exp):
+                
+                if self.check_if_poc(wait_judge_poc_or_exp.lower()):
                     poc = wait_judge_poc_or_exp
-                else:
+
+                if poc == '' and exp == '':
                     poc = wait_judge_poc_or_exp
             
             if poc != '' and exp != '':
                 return CVEDetailItem(cve_id, cve.cve_url, cve_description=cve.cve_description, cve_timestamp=cve.cve_timestamp, poc=poc, exp=exp)
+            
+            i += 1
+            if i > 15:
+                break
