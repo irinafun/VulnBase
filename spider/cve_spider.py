@@ -47,6 +47,9 @@ class CVEComponentItem:
     def __init__(self, component_name, component_version):
         self.component_name = component_name
         self.component_version = component_version
+    
+    def __eq__(self, other):
+        return self.component_name == other.component_name and self.component_version == other.component_version
 
 class CVEDetailItem:
     cve_id: str = ''
@@ -78,6 +81,41 @@ class CVEDetailItem:
         exp = '\n'.join(exp) + '\n...'
 
         return 'cve: {}, created: {} \n exp: \n{} \n poc: \n{}'.format(self.cve_id, datetime.fromtimestamp(self.cve_timestamp), exp, poc)
+    
+    '''
+        check if current cve detail is enough
+    '''
+    def info_enough(self) -> bool:
+        return self.poc != '' and self.exp != '' and len(self.components) > 0 and self.cve_description != ''
+    
+    '''
+        merge two cve detail
+    '''
+    def __add__(self, other):
+        if self.cve_id != other.cve_id:
+            raise Exception('cve id not match')
+        
+        if self.cve_description == '':
+            self.cve_description = other.cve_description
+        
+        if self.poc == '':
+            self.poc = other.poc
+        
+        if self.exp == '':
+            self.exp = other.exp
+        
+        if len(other.refs) > 0:
+            for ref in other.refs:
+                if ref not in self.refs:
+                    self.refs.append(ref)
+        
+        if len(other.components) > 0:
+            for component in other.components:
+                if component not in self.components:
+                    self.components.append(component)
+        
+        return self
+        
 
 class CVEListSpider(Spider):
     def __init__(self):
@@ -109,6 +147,9 @@ class CVESpider(Spider):
     def __init__(self, cve_list_spider: List[CVEListSpider], cve_detail_spider: List[CVEDetailSpider]):
         self.cve_list_spider = cve_list_spider
         self.cve_detail_spider = cve_detail_spider
+
+        # rank cve detail spider by priority
+        self.cve_detail_spider.sort(key=lambda x: x.__priority__, reverse=True)
 
         self._max_thread = 10
 
@@ -153,7 +194,18 @@ class CVESpider(Spider):
         fetch cve detail from source, and return a cve detail
     '''
     def get_detail(self, cve_id) -> CVEDetailItem:
-        return self.cve_detail_spider.get_detail(cve_id)
+        detail = None
+        for spider in self.cve_detail_spider:
+            temp_detail = spider.get_detail(cve_id)
+            if detail is None:
+                detail = temp_detail
+            else:
+                detail += temp_detail
+            
+            if detail.info_enough():
+                break
+        
+        return detail
     
     '''
         start
