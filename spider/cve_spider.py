@@ -161,9 +161,9 @@ class CVESpider(Spider):
 
         threads = []
         cve_map = {}
-        thread_lock = threading.Lock
-        if max_thread > len(self.cve_list_spider):
-            max_thread = len(self.cve_list_spider)
+        thread_lock = threading.Lock()
+        if self._max_thread > len(self.cve_list_spider):
+            self._max_thread = len(self.cve_list_spider)
         
         def _get_list(spider: CVEListSpider):
             list = spider.get_list()
@@ -180,7 +180,7 @@ class CVESpider(Spider):
                         cve.add_ref(ref)
             thread_lock.release()
 
-        for i in range(max_thread):
+        for i in range(self._max_thread):
             thread = threading.Thread(target=_get_list, args=(self.cve_list_spider[i],))
             thread.start()
             threads.append(thread)

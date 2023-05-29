@@ -80,7 +80,9 @@ class NVDSpider(CVEListSpider):
             # save to cache
             with open('cache/nvd_cve_list.pkl', 'wb') as f:
                 pickle.dump(cve_list, f)
-    
+                
+        return cve_list
+
     @staticmethod
     def get_cached_list() -> List[CVESimpleItem]:
         cve_list = []

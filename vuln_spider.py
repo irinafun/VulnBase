@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     if args.m == 'spider':
         spider = CVESpider([NVDSpider()], [GithubSpider(), ExploitDBSpider()])
-        spider.get_list()
+        spider.start()
     elif args.m == 'cached':
         list = NVDSpider.get_cached_list()
         print(f'cached list length: {len(list)}')

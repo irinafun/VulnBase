@@ -1,5 +1,36 @@
 from spider.cve_spider import CVEDetailSpider, CVEDetailItem, CVESimpleItem
 from spider.thirdpart.github_factory import GithubFactory
+from spider.config.github import is_black_repo
+
+'''
+    cause there are lots of cve sensitive files in github, we need to filter them
+    just statistic the file ext of the cve sensitive files in github
+    to filter the top N repos by file count, there are some repos which are not real exploit code, maybe just a json
+    to just find the top N repos
+
+    and just download the top N repos, and check if the repo contains exploit code or poc
+
+    2023/5/29 - Yeuoly
+'''
+__test_repo_statistics = {}
+
+def add_repo_file(repo, file_ext):
+    if repo not in __test_repo_statistics:
+        __test_repo_statistics[repo] = {}
+    
+    if file_ext not in __test_repo_statistics[repo]:
+        __test_repo_statistics[repo][file_ext] = 0
+    
+    __test_repo_statistics[repo][file_ext] += 1
+
+def print_repo_statistics():
+    # rank the top 10 repos by file count
+    top_10 = sorted(__test_repo_statistics.items(), key=lambda x: sum(x[1].values()), reverse=True)[:10]
+    print('top 10 repos by file count:')
+    for repo in top_10:
+        # rank the top 2 file ext by file count
+        top_2 = sorted(repo[1].items(), key=lambda x: x[1], reverse=True)[:2]
+        print(f'{repo[0]}: {top_2}')
 
 class GithubSpider(CVEDetailSpider):
     def __init__(self):
@@ -222,6 +253,12 @@ class GithubSpider(CVEDetailSpider):
             # check if the repository contains exploit code or poc and check if the repo is popular enough
             item_url = item.html_url
             repo = item.repository.full_name
+
+            if is_black_repo(repo):
+                continue
+
+            add_repo_file(repo, item.name.split('.')[-1])
+            print_repo_statistics()
 
             stars = item.repository.stargazers_count
             forks = item.repository.forks_count
