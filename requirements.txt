@@ -1,2 +1,3 @@
 requests
 PyGithub==1.58.2
+wget==3.2

@@ -140,7 +140,7 @@ class CVEDetailSpider(Spider):
     '''
         fetch cve detail from source, and return a cve detail
     '''
-    def get_detail(self, cve_id) -> CVEDetailItem:
+    def get_detail(self, cve_id: CVESimpleItem) -> CVEDetailItem:
         raise NotImplementException('get_detail')
 
 class CVESpider(Spider):
@@ -193,10 +193,13 @@ class CVESpider(Spider):
     '''
         fetch cve detail from source, and return a cve detail
     '''
-    def get_detail(self, cve_id) -> CVEDetailItem:
+    def get_detail(self, cve: CVESimpleItem) -> CVEDetailItem:
         detail = None
         for spider in self.cve_detail_spider:
-            temp_detail = spider.get_detail(cve_id)
+            temp_detail = spider.get_detail(cve)
+            if temp_detail is None:
+                continue
+
             if detail is None:
                 detail = temp_detail
             else:
@@ -213,5 +216,5 @@ class CVESpider(Spider):
     def start(self) -> List[CVEDetailItem]:
         items = self.get_list()
         for item in items:
-            detail = self.get_detail(item.cve_id)
+            detail = self.get_detail(item)
             print(detail)
